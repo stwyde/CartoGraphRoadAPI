@@ -1,8 +1,8 @@
-origVert = open("../DataFiles/TestFiles/philippines/philippines_list_vertices.txt", "r")
-origEdges = open("../DataFiles/TestFiles/philippines/philippines_list_edges.txt", "r")
-newVerts = open("../DataFiles/TestFiles/philippines/outputvertices.txt", "r")
-newEdges = open("../DataFiles/TestFiles/philippines/outputEdges.txt", "r")
-semanticTree = open("../DataFiles/TestFiles/philippines/semantic_edges.txt", "r")
+origVert = open("../simpleData/Original Vertices.txt", "r")
+origEdges = open("../simpleData/WikiEdgesInput.txt", "r")
+newVerts = open("../simpleData/output_verticesWiki.txt", "r")
+newEdges = open("../simpleData/output_edgesWiki.txt", "r")
+semanticTree = open("../simpleData/output_semanticTreeWiki.txt", "r")
 
 def hunt(childEdgeId, frontStack, backStack, childEdges, topParents):
     for line in childEdges:
@@ -19,6 +19,26 @@ def hunt(childEdgeId, frontStack, backStack, childEdges, topParents):
                 frontStack.append(node)
             return frontStack
 
+def hunt2(childEdgeId, frontStack, backStack, childEdges, topParents):
+    foundParent = False
+    while(foundParent == False):
+        haschildParent = False
+        for line in childEdges:
+            if childEdgeId in line[0]:
+                frontStack.append(line[1])
+                backStack.insert(0, line[2])
+                childEdgeId = line[3]
+                haschildParent = True
+                break
+        if(haschildParent == False):
+            for line in topParents:
+                if childEdgeId in line[0]:
+                    frontStack.append(line[1])
+                    backStack.insert(0, line[2])
+                    #merges front and back stacks
+                    for node in backStack:
+                        frontStack.append(node)
+                    return frontStack
 
 origVert = [x.rstrip() for x in origVert]
 origEdges = [x.rstrip() for x in origEdges]
@@ -53,7 +73,7 @@ for line in semanticTree:
          topParents.append(splitLine)
      else:
          print("ERROR, SEMANTIC TREE CONTAINS IMPROPERLY FORMATTED OBJECT")
-
+print("Done setting up stuff, now pairing and pathing")
 paths = {}
 for pairing in pairings:
     frontStack = [pairing[0]]
@@ -63,6 +83,7 @@ for pairing in pairings:
         if pairing[0] in entry[1] and pairing[1] in entry[2]:
             #removes line to make future pathing easier. This only happens for the initial unbundled edge so it should be okay, especially since the relationship is secured in inputEdges
             childEdges.remove(entry)
-            finalPath = hunt(entry[3], frontStack, backStack, childEdges, topParents)
+            finalPath = hunt2(entry[3], frontStack, backStack, childEdges, topParents)
             paths[pairing] = finalPath
+            print(paths[pairing])
             break
