@@ -1,0 +1,15 @@
+mingledBundleVertexId0 mingledBundleVertexId1 3
+1 mingledBundleVertexId0 1
+mingledBundleVertexId1 4 1
+3 mingledBundleVertexId0 1
+mingledBundleVertexId1 4 1
+13 4 1
+14 2 1
+15 3 1
+16 1 1
+9 8 1
+10 5 1
+11 6 1
+12 7 1
+11 13 1
+7 5 1

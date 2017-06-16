@@ -1,0 +1,13 @@
+e23 mingledBundleVertexId0 mingledBundleVertexId1 
+e11 1 4 e23
+e10 3 4 e23
+e1 13 4 
+e2 14 2 
+e3 15 3 
+e4 16 1 
+e5 9 8 
+e6 10 5 
+e7 11 6 
+e8 12 7 
+e9 11 13 
+e12 7 5 
