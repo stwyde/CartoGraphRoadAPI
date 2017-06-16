@@ -64,5 +64,5 @@ for pairing in pairings:
             #removes line to make future pathing easier. This only happens for the initial unbundled edge so it should be okay, especially since the relationship is secured in inputEdges
             childEdges.remove(entry)
             finalPath = hunt(entry[3], frontStack, backStack, childEdges, topParents)
-            print(finalPath)
+            paths[pairing] = finalPath
             break
