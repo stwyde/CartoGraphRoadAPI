@@ -1,15 +1,15 @@
 origVert = open("../simpleData/Original Vertices.txt", "r")
 origEdges = open("../simpleData/WikiEdgesInput.txt", "r")
-newVerts = open("../simpleData/output_verticesWiki.txt", "r")
-newEdges = open("../simpleData/output_edgesWiki.txt", "r")
-semanticTree = open("../simpleData/output_semanticTreeWiki.txt", "r")
+newVerts = open("../simpleData/outputvertices.txt", "r")
+newEdges = open("../simpleData/outputEdges.txt", "r")
+semanticTree = open("../simpleData/semantic_edges.txt", "r")
 
 def hunt(childEdgeId, frontStack, backStack, childEdges, topParents):
     if childEdgeId in childEdges:
         frontStack.append(childEdges[childEdgeId][0])
         backStack.insert(0, childEdges[childEdgeId][1])
         newChildEdge = childEdges[childEdgeId][2]
-        print(newChildEdge)
+        #print(newChildEdge)
         return hunt(newChildEdge, frontStack, backStack, childEdges, topParents)
 
     elif childEdgeId in topParents:
@@ -19,6 +19,13 @@ def hunt(childEdgeId, frontStack, backStack, childEdges, topParents):
         for node in backStack:
             frontStack.append(node)
         return frontStack
+
+def findPath(source, destination, childEdges, topParents):
+    frontStack = [source]
+    backStack = [destination]
+    for entry in childEdges:
+        if source in childEdges[entry][0] and destination in childEdges[entry][1]:
+            return hunt(childEdges[entry][2], frontStack, backStack, childEdges, topParents)
 
 def hunt2(childEdgeId, frontStack, backStack, childEdges, topParents):
     foundParent = False
@@ -40,39 +47,69 @@ def hunt2(childEdgeId, frontStack, backStack, childEdges, topParents):
             foundParent = True
             return frontStack
 
+def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, childEdges, topParents, outboundPaths, inboundPaths):
+    pointsinPort = []
+    for point in vertices:
+        if xmax > float(vertices[point][0]) > xmin and ymin < float(vertices[point][1]) < ymax:
+            pointsinPort.append(point)
+    print("Points in the viewport: ")
+    print(pointsinPort)
+    pathsToMine = []
+    for point in pointsinPort:
+        #this part works
+        try:
+            for dest in outboundPaths[point]:
+                pathsToMine.append((point, dest))
+        #This part does...
+        except KeyError:
+            pass
+        try:
+            for src in inboundPaths[point]:
+                pathsToMine.append([src, point])
+        except KeyError:
+            pass
+    paths = []
+    print("Finding paths now. Paths to do: " + str(len(pathsToMine)))
+    for path in pathsToMine:
+        paths.append(findPath(path[0], path[1], childEdges, topParents))
+    return paths
+
 origVert = [x.rstrip() for x in origVert]
 origEdges = [x.rstrip() for x in origEdges]
 newVerts = [x.rstrip() for x in newVerts]
 newEdges = [x.rstrip() for x in newEdges]
 semanticTree = [x.rstrip() for x in semanticTree]
 del(origVert[0])
+
 vertices = {}
 for line in origVert:
     a,b,c = line.split(" ")
-    vertices[a] = (b,c)
+    vertices[a] = [b,c]
+
 newVertices = {}
 for line in newVerts:
     a,b,c = line.split(" ")
-    newVertices[a] = (b,c)
+    newVertices[a] = [b,c]
 
 del(origEdges[0])
+outboundPaths = {}
+#inboundPaths is a dictinary where the key is a vertex and the values are an array which is composed of all the values which have roads going into the key value. This is the reverse of outboundPaths where the key has outbound roads to the values
+inboundPaths = {}
 pairings = []
 for line in origEdges:
     a,b = line.split(" ")
     pairings.append((a,b))
+    if a in outboundPaths:
+        outboundPaths[a].append(b)
 
-#Now work on pathing! Commented version implements array of lines, current version uses a dict for semantic tree
-# topParents = []
-# childEdges = []
-# for line in semanticTree:
-#      line2 = line
-#      splitLine = line2.split(" ")
-#      if len(splitLine) == 4:
-#          childEdges.append(splitLine)
-#      elif len(splitLine) == 3:
-#          topParents.append(splitLine)
-#      else:
-#          print("ERROR, SEMANTIC TREE CONTAINS IMPROPERLY FORMATTED OBJECT")
+    else:
+        outboundPaths[a] = [b]
+    if b in inboundPaths:
+        inboundPaths[b].append(a)
+
+    else:
+        inboundPaths[b] = [a]
+
 topParents = {}
 childEdges = {}
 for line in semanticTree:
@@ -86,21 +123,28 @@ for line in semanticTree:
          print("ERROR, SEMANTIC TREE CONTAINS IMPROPERLY FORMATTED OBJECT")
 
 print("Done setting up stuff, now pairing and pathing")
-
-paths = {}
-#for pairing in pairings:
-pairing = pairings.pop()
-frontStack = [pairing[0]]
-backStack = [pairing[1]]
-lastEdge = "hehe xD" #what's this for again?
-for entry in childEdges:
-    if pairing[0] in childEdges[entry][0] and pairing[1] in childEdges[entry][1]:
-        print(lastEdge)
-        #removes line to make future pathing easier. This only happens for the initial unbundled edge so it should be okay, especially since the relationship is secured in inputEdges
-        #childEdges.remove(entry)
-        print entry
-        print childEdges[entry][2]
-        finalPath = hunt(childEdges[entry][2], frontStack, backStack, childEdges, topParents)
-        paths[pairing] = finalPath
-        print(paths[pairing])
-        break
+print(getViewPortPaths(-7.5, -5, -7.5, -5, vertices, childEdges, topParents, outboundPaths,inboundPaths))
+#This brute forces through everything. Estimated runtime: 300 hours. RIPO SKIPO
+# paths = {}
+# i=0
+# for pairing in pairings:
+#     frontStack = [pairing[0]]
+#     backStack = [pairing[1]]
+#     lastEdge = "hehe xD" #what's this for again?
+#     i+=1
+#     for entry in childEdges:
+#         if pairing[0] in childEdges[entry][0] and pairing[1] in childEdges[entry][1]:
+#             #print(lastEdge)
+#             #removes line to make future pathing easier. This only happens for the initial unbundled edge so it should be okay, especially since the relationship is secured in inputEdges
+#             #childEdges.remove(entry)
+#             #print entry
+#             #print childEdges[entry][2]
+#             finalPath = hunt(childEdges[entry][2], frontStack, backStack, childEdges, topParents)
+#             paths[pairing] = finalPath
+#             if(len(paths[pairing]) > 15):
+#                 print(paths[pairing])
+#             break
+#     if(i%10000 == 0):
+#         print(i)
+#         #looks like it takes 40 minutes to do 10 thousand paths
+print("All roads generated. Have a great day! (hehe xd)")
