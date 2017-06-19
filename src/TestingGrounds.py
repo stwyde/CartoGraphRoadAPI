@@ -27,6 +27,7 @@ def findPath(source, destination, childEdges, topParents):
         if source in childEdges[entry][0] and destination in childEdges[entry][1]:
             return hunt(childEdges[entry][2], frontStack, backStack, childEdges, topParents)
 
+#nonrecursive version of hunt
 def hunt2(childEdgeId, frontStack, backStack, childEdges, topParents):
     foundParent = False
     while(foundParent == False):
@@ -49,29 +50,29 @@ def hunt2(childEdgeId, frontStack, backStack, childEdges, topParents):
 
 def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, childEdges, topParents, outboundPaths, inboundPaths):
     pointsinPort = []
+    pathsToMine = []
     for point in vertices:
         if xmax > float(vertices[point][0]) > xmin and ymin < float(vertices[point][1]) < ymax:
             pointsinPort.append(point)
+            try:
+                for dest in outboundPaths[point]:
+                    pathsToMine.append((point, dest))
+            except KeyError:
+                pass
+            try:
+                for src in inboundPaths[point]:
+                    pathsToMine.append([src, point])
+            except KeyError:
+                pass
+
     print("Points in the viewport: ")
     print(pointsinPort)
-    pathsToMine = []
-    for point in pointsinPort:
-        #this part works
-        try:
-            for dest in outboundPaths[point]:
-                pathsToMine.append((point, dest))
-        #This part does...
-        except KeyError:
-            pass
-        try:
-            for src in inboundPaths[point]:
-                pathsToMine.append([src, point])
-        except KeyError:
-            pass
     paths = []
     print("Finding paths now. Paths to do: " + str(len(pathsToMine)))
     for path in pathsToMine:
         paths.append(findPath(path[0], path[1], childEdges, topParents))
+        if(len(paths) % 100 == 0):
+            print(len(paths))
     return paths
 
 origVert = [x.rstrip() for x in origVert]
@@ -123,7 +124,7 @@ for line in semanticTree:
          print("ERROR, SEMANTIC TREE CONTAINS IMPROPERLY FORMATTED OBJECT")
 
 print("Done setting up stuff, now pairing and pathing")
-print(getViewPortPaths(-7.5, -5, -7.5, -5, vertices, childEdges, topParents, outboundPaths,inboundPaths))
+print(getViewPortPaths(-5.5, -5, -5.5, -5, vertices, childEdges, topParents, outboundPaths,inboundPaths))
 #This brute forces through everything. Estimated runtime: 300 hours. RIPO SKIPO
 # paths = {}
 # i=0
