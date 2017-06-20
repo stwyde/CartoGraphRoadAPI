@@ -1,21 +1,6 @@
 origVert = open("../simpleData/Original Vertices.txt", "r")
 semanticTree = open("../simpleData/NewSemanticTree.txt", "r")
 
-def hunt(childEdgeId, frontStack, backStack, childEdges, topParents):
-    if childEdgeId in childEdges:
-        frontStack.append(childEdges[childEdgeId][0])
-        backStack.insert(0, childEdges[childEdgeId][1])
-        newChildEdge = childEdges[childEdgeId][2]
-        #print(newChildEdge)
-        return hunt(newChildEdge, frontStack, backStack, childEdges, topParents)
-
-    elif childEdgeId in topParents:
-        frontStack.append(topParents[childEdgeId][0])
-        backStack.insert(0,topParents[childEdgeId][1])
-        #merges front and back stacks
-        for node in backStack:
-            frontStack.append(node)
-        return frontStack
 
 def getPath(childEdgeId, edgeDict, frontStack = [], backStack = []):
     if(len(edgeDict[childEdgeId]) == 4):
@@ -28,13 +13,6 @@ def getPath(childEdgeId, edgeDict, frontStack = [], backStack = []):
         #merge stacks:
         frontStack.append(backStack)
         return frontStack
-
-def findPath(source, destination, childEdges, topParents):
-    frontStack = [source]
-    backStack = [destination]
-    for entry in childEdges:
-        if source in childEdges[entry][0] and destination in childEdges[entry][1]:
-            return hunt(childEdges[entry][2], frontStack, backStack, childEdges, topParents)
 
 def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPaths, edgeDict):
     pointsinPort = []
@@ -72,7 +50,6 @@ origVert = [x.rstrip() for x in origVert]
 semanticTree = [x.rstrip() for x in semanticTree]
 dictFormingSemanticTree = semanticTree
 del(origVert[0])
-
 vertices = {}
 #Creates a dict with vertex ID as key, then x/y coordinates as values in array list.
 for line in origVert:
@@ -115,29 +92,6 @@ for line in dictFormingSemanticTree:
 
 print("Done setting up stuff, now pairing and pathing")
 print(getViewPortPaths(-5.5, -5, -5.5, -5, vertices, outboundPaths,inboundPaths, edgeDictionary))
-#This brute forces through everything. Estimated runtime: 300 hours. RIPO SKIPO
-# paths = {}
-# i=0
-# for pairing in pairings:
-#     frontStack = [pairing[0]]
-#     backStack = [pairing[1]]
-#     lastEdge = "hehe xD" #what's this for again?
-#     i+=1
-#     for entry in childEdges:
-#         if pairing[0] in childEdges[entry][0] and pairing[1] in childEdges[entry][1]:
-#             #print(lastEdge)
-#             #removes line to make future pathing easier. This only happens for the initial unbundled edge so it should be okay, especially since the relationship is secured in inputEdges
-#             #childEdges.remove(entry)
-#             #print entry
-#             #print childEdges[entry][2]
-#             finalPath = hunt(childEdges[entry][2], frontStack, backStack, childEdges, topParents)
-#             paths[pairing] = finalPath
-#             if(len(paths[pairing]) > 15):
-#                 print(paths[pairing])
-#             break
-#     if(i%10000 == 0):
-#         print(i)
-#         #looks like it takes 40 minutes to do 10 thousand paths
 print("All roads generated. Have a great day! (hehe xd)")
 
 #New implementation preferred: dict[src:dict[dest:[edgeId, weight, ParentID]]] BUT how do we find inbound edges quickly? do we make a reversed one?
