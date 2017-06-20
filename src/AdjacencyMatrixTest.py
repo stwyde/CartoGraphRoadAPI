@@ -1,7 +1,4 @@
 origVert = open("../simpleData/Original Vertices.txt", "r")
-origEdges = open("../simpleData/WikiEdgesInput.txt", "r")
-newVerts = open("../simpleData/outputvertices.txt", "r")
-newEdges = open("../simpleData/outputEdges.txt", "r")
 semanticTree = open("../simpleData/NewSemanticTree.txt", "r")
 
 def hunt(childEdgeId, frontStack, backStack, childEdges, topParents):
@@ -72,9 +69,6 @@ def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPat
     return paths
 
 origVert = [x.rstrip() for x in origVert]
-origEdges = [x.rstrip() for x in origEdges]
-newVerts = [x.rstrip() for x in newVerts]
-newEdges = [x.rstrip() for x in newEdges]
 semanticTree = [x.rstrip() for x in semanticTree]
 dictFormingSemanticTree = semanticTree
 del(origVert[0])
@@ -85,13 +79,7 @@ for line in origVert:
     a,b,c = line.split(" ")
     vertices[a] = [b,c]
 
-#newVertices is used to only generate a dictionary for intermediate nodes associated with bundling.
-newVertices = {}
-for line in newVerts:
-    a,b,c = line.split(" ")
-    newVertices[a] = [b,c]
 
-del(origEdges[0])
 outboundPaths = {}
 edgeDictionary = {}
 #inboundPaths is a dictinary where the key is a vertex and the values are an array which is composed of all the values which have roads going into the key value. This is the reverse of outboundPaths where the key has outbound roads to the values
