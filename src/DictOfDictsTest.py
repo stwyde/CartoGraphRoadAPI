@@ -2,7 +2,7 @@ origVert = open("../simpleData/Original Vertices.txt", "r")
 origEdges = open("../simpleData/WikiEdgesInput.txt", "r")
 newVerts = open("../simpleData/outputvertices.txt", "r")
 newEdges = open("../simpleData/outputEdges.txt", "r")
-semanticTree = open("../simpleData/semantic_edges.txt", "r")
+semanticTree = open("../simpleData/NewSemanticTree.txt", "r")
 
 def hunt(childEdgeId, frontStack, backStack, childEdges, topParents):
     if childEdgeId in childEdges:
@@ -20,6 +20,18 @@ def hunt(childEdgeId, frontStack, backStack, childEdges, topParents):
             frontStack.append(node)
         return frontStack
 
+def getPath(childEdgeId, edgeDict, frontStack = [], backStack = []):
+    if(len(edgeDict[childEdgeId]) == 4):
+        #we still have parents!
+        parentID = edgeDict[childEdgeId][2]
+        frontStack.append(edgeDict[parentID][0])
+        backStack.insert(0, edgeDict[parentID][1])
+        return getPath(parentID, edgeDict, frontStack, backStack)
+    elif(len(edgeDict[childEdgeId]) == 3):
+        #merge stacks:
+        frontStack.append(backStack)
+        return frontStack
+
 def findPath(source, destination, childEdges, topParents):
     frontStack = [source]
     backStack = [destination]
@@ -27,51 +39,35 @@ def findPath(source, destination, childEdges, topParents):
         if source in childEdges[entry][0] and destination in childEdges[entry][1]:
             return hunt(childEdges[entry][2], frontStack, backStack, childEdges, topParents)
 
-#nonrecursive version of hunt
-def hunt2(childEdgeId, frontStack, backStack, childEdges, topParents):
-    foundParent = False
-    while(foundParent == False):
-        if(childEdgeId in childEdges):
-            line = childEdges[childEdgeId]
-            frontStack.append(line[0])
-            backStack.insert(0, line[1])
-            childEdgeId = line[3]
-            print(frontStack)
-
-        elif(childEdgeId in topParents):
-            line = topParents[childEdgeId]
-            frontStack.append(line[0])
-            backStack.insert(0, line[1])
-            #merges front and back stacks
-            for node in backStack:
-                frontStack.append(node)
-            foundParent = True
-            return frontStack
-
-def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, childEdges, topParents, outboundPaths, inboundPaths):
+def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPaths, edgeDict):
     pointsinPort = []
-    pathsToMine = []
+    outpathsToMine = []
+    inpathsToMine = []
     for point in vertices:
         if xmax > float(vertices[point][0]) > xmin and ymin < float(vertices[point][1]) < ymax:
-            pointsinPort.append(point)
+            pointsinPort.append(point) #points in port is an array of pointIDs which are strings.
             try:
                 for dest in outboundPaths[point]:
-                    pathsToMine.append((point, dest))
+                    outpathsToMine.append((point, dest)) #outpaths and inpaths include points and dest of edges we want to reconstruct
             except KeyError:
                 pass
             try:
                 for src in inboundPaths[point]:
-                    pathsToMine.append([src, point])
+                    inpathsToMine.append([src, point])
             except KeyError:
                 pass
 
     print("Points in the viewport: ")
     print(pointsinPort)
     paths = []
-    print("Finding paths now. Paths to do: " + str(len(pathsToMine)))
-    for path in pathsToMine:
-        paths.append(findPath(path[0], path[1], childEdges, topParents))
+    print("Finding paths now. Paths to do: " + str(len(inpathsToMine) +len(outpathsToMine)))
+    for path in inpathsToMine: #path[0] = src, path[1] = dest
+        paths.append(getPath(inboundPaths[path[1]][path[0]][0], edgeDict,[path[1]], [path[0]]))
         if(len(paths) % 100 == 0):
+            print(len(paths))
+    for path in outpathsToMine:
+        paths.append(getPath(outboundPaths[path[0]][path[1]][0], edgeDict, [path[0]], [path[1]]))
+        if (len(paths) % 100 == 0):
             print(len(paths))
     return paths
 
@@ -80,13 +76,16 @@ origEdges = [x.rstrip() for x in origEdges]
 newVerts = [x.rstrip() for x in newVerts]
 newEdges = [x.rstrip() for x in newEdges]
 semanticTree = [x.rstrip() for x in semanticTree]
+dictFormingSemanticTree = semanticTree
 del(origVert[0])
 
 vertices = {}
+#Creates a dict with vertex ID as key, then x/y coordinates as values in array list.
 for line in origVert:
     a,b,c = line.split(" ")
     vertices[a] = [b,c]
 
+#newVertices is used to only generate a dictionary for intermediate nodes associated with bundling.
 newVertices = {}
 for line in newVerts:
     a,b,c = line.split(" ")
@@ -94,37 +93,40 @@ for line in newVerts:
 
 del(origEdges[0])
 outboundPaths = {}
+edgeDictionary = {}
 #inboundPaths is a dictinary where the key is a vertex and the values are an array which is composed of all the values which have roads going into the key value. This is the reverse of outboundPaths where the key has outbound roads to the values
 inboundPaths = {}
+#Todo: set pairings to be the new fangled dictionary thingamabobber
 pairings = []
-for line in origEdges:
-    a,b = line.split(" ")
-    pairings.append((a,b))
-    if a in outboundPaths:
-        outboundPaths[a].append(b)
+for line in dictFormingSemanticTree:
+    elements = line.split(" ")
+    edgeDictionary[elements[0]] = elements[1:] #Edge ID as key,  [src, dest, parent, weight] as vals
+    #if both src and dst are in orig Vertices:
+    if(elements[1] in vertices.keys() and elements[2] in vertices.keys()):
+        #todo: reverify this makes sense. elements[1] is src, elements[2] is dest
+        pairings.append((elements[1], elements[2]))
+        if len(elements) == 4: #here there's EdgeID, src, dest, weight, here we ARE at the parent
+            if elements[1] in outboundPaths.keys():
+                outboundPaths[elements[1]].update({elements[2]: [elements[0], elements[3]]})
+            else:
+                outboundPaths[1] = {elements[2]: [elements[0], elements[3]]}
+            if elements[2] in inboundPaths.keys():
+                inboundPaths[elements[2]].update({elements[1]:[elements[0], elements[3]]})
+            else:
+                inboundPaths[elements[2]] = {elements[1]:[elements[0], elements[3]]}
+        elif len(elements) == 5: #here we are still at a child and have to append the parent. format: Src key -> dest Key -> [EdgeId, Weight, Parent if exists], if path[src][dest].size = 3, we gotta keep going, if =2, we at end
+            if elements[1] in outboundPaths.keys():
+                outboundPaths[elements[1]].update({elements[2]: [elements[0], elements[4], elements[3]]})
+            else:
+                outboundPaths[1] = {elements[2]: [elements[0], elements[4], elements[3]]}
+            if elements[2] in inboundPaths.keys():
+                inboundPaths[elements[2]].update({elements[1]: [elements[0], elements[4], elements[3]]})
+            else:
+                inboundPaths[elements[2]] = {elements[1]: [elements[0], elements[4], elements[3]]}
 
-    else:
-        outboundPaths[a] = [b]
-    if b in inboundPaths:
-        inboundPaths[b].append(a)
-
-    else:
-        inboundPaths[b] = [a]
-
-topParents = {}
-childEdges = {}
-for line in semanticTree:
-     line2 = line
-     splitLine = line2.split(" ")
-     if len(splitLine) == 4:
-         childEdges[splitLine[0]] = splitLine[1:] #Edge ID as key, nodes src dest and parent Edge as vals
-     elif len(splitLine) == 3:
-         topParents[splitLine[0]] = splitLine[1:] #Edge ID as key, nodes src and dest as vals
-     else:
-         print("ERROR, SEMANTIC TREE CONTAINS IMPROPERLY FORMATTED OBJECT")
 
 print("Done setting up stuff, now pairing and pathing")
-print(getViewPortPaths(-5.5, -5, -5.5, -5, vertices, childEdges, topParents, outboundPaths,inboundPaths))
+print(getViewPortPaths(-5.5, -5, -5.5, -5, vertices, outboundPaths,inboundPaths, edgeDictionary))
 #This brute forces through everything. Estimated runtime: 300 hours. RIPO SKIPO
 # paths = {}
 # i=0
