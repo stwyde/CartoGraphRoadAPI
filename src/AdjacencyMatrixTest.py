@@ -1,21 +1,18 @@
 import datetime
-origVert = open("../simpleData/Original Vertices.txt", "r")
-semanticTree = open("../simpleData/NewSemanticTree.txt", "r")
+origVert = open('./DataFiles/Original Vertices.txt', "r")
+semanticTree = open('./DataFiles/output_semanticTreeWiki.txt', "r")
 
 
 def getPath(childEdgeId, edgeDict, frontStack = [], backStack = []):
-    frontStack.append(edgeDict[childEdgeId][0])
-    backStack.insert(0, edgeDict[childEdgeId][1])
     if(len(edgeDict[childEdgeId]) == 4):
         #we still have parents!
         parentID = edgeDict[childEdgeId][2]
-        #frontStack.append(edgeDict[parentID][0])
-        #backStack.insert(0, edgeDict[parentID][1])
+        frontStack.append(edgeDict[parentID][0])
+        backStack.insert(0, edgeDict[parentID][1])
         return getPath(parentID, edgeDict, frontStack, backStack)
     elif(len(edgeDict[childEdgeId]) == 3):
         #merge stacks:
-        for val in backStack:
-            frontStack.append(val)
+        frontStack.append(backStack)
         return frontStack
 
 def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPaths, edgeDict):
@@ -42,6 +39,8 @@ def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPat
     print("Finding paths now. Paths to do: " + str(len(inpathsToMine) +len(outpathsToMine)))
     for path in inpathsToMine: #path[0] = src, path[1] = dest
         paths.append(getPath(inboundPaths[path[1]][path[0]][0], edgeDict,[path[1]], [path[0]]))
+       # print(path)
+        #print(inboundPaths[path[1]])
         if(len(paths) % 100000 == 0):
             print(len(paths))
     for path in outpathsToMine:
@@ -101,6 +100,12 @@ paths = (getViewPortPaths(-40, 40, -40, 40, vertices, outboundPaths,inboundPaths
 print(len(paths))
 print("All roads generated. Have a great day! (hehe xd)")
 print(paths[12])
+print(paths[199])
+print(paths[400])
+keys = inboundPaths.keys()
+print(inboundPaths[keys[0]])
+
+print(outboundPaths[keys[0]])
 newtime = datetime.datetime.now()
 print("Time elapsed: " + str(newtime-oldTime))
 #New implementation preferred: dict[src:dict[dest:[edgeId, weight, ParentID]]] BUT how do we find inbound edges quickly? do we make a reversed one?

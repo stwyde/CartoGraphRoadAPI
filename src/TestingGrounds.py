@@ -48,6 +48,8 @@ def hunt2(childEdgeId, frontStack, backStack, childEdges, topParents):
             foundParent = True
             return frontStack
 
+#(-7.5, -5, -7.5, -5,)
+
 def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, childEdges, topParents, outboundPaths, inboundPaths):
     pointsinPort = []
     pathsToMine = []
