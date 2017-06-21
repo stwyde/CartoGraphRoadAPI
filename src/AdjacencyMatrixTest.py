@@ -2,7 +2,6 @@ import datetime
 import numpy as np
 origVert = open('./DataFiles/Original Vertices.txt', "r")
 semanticTree = open('./DataFiles/output_semanticTreeWiki.txt', "r")
-import pandas as pd
 
 
 def getPath(childEdgeId, edgeDict, frontStack = [], backStack = []):
@@ -45,7 +44,7 @@ def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPat
     print("Finding paths now. Paths to do: " + str(len(inpathsToMine) +len(outpathsToMine)))
     for path in inpathsToMine: #path[0] = src, path[1] = dest
 
-        paths.append(getPath(inboundPaths[path[1]][path[0]][0], edgeDict,[path[1]], [path[0]]))
+        paths.append(getPath(inboundPaths[path[1]][path[0]][0], edgeDict,[], []))
        # print(path)
         #print(inboundPaths[path[1]])
         if(len(paths) % 100000 == 0):
@@ -103,7 +102,7 @@ for line in dictFormingSemanticTree:
 
 
 print("Done setting up stuff, now pairing and pathing")
-paths = (getViewPortPaths(-5, 5, -5, 5, vertices, outboundPaths,inboundPaths, edgeDictionary))
+paths = (getViewPortPaths(-20, 20, -20, 20, vertices, outboundPaths,inboundPaths, edgeDictionary))
 print(len(paths))
 print("All roads generated. Have a great day! (hehe xd)")
 print(paths[12])
