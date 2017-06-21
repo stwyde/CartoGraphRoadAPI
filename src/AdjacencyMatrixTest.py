@@ -1,14 +1,18 @@
 import datetime
+import numpy as np
 origVert = open('./DataFiles/Original Vertices.txt', "r")
 semanticTree = open('./DataFiles/output_semanticTreeWiki.txt', "r")
+import pandas as pd
 
 
 def getPath(childEdgeId, edgeDict, frontStack = [], backStack = []):
+    frontStack.append(edgeDict[childEdgeId][0])
+    backStack.insert(0, edgeDict[childEdgeId][1])
     if(len(edgeDict[childEdgeId]) == 4):
         #we still have parents!
         parentID = edgeDict[childEdgeId][2]
-        frontStack.append(edgeDict[parentID][0])
-        backStack.insert(0, edgeDict[parentID][1])
+        #frontStack.append(edgeDict[parentID][0])
+        #backStack.insert(0, edgeDict[parentID][1])
         return getPath(parentID, edgeDict, frontStack, backStack)
     elif(len(edgeDict[childEdgeId]) == 3):
         #merge stacks:
@@ -29,15 +33,18 @@ def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPat
                 pass
             try:
                 for src in inboundPaths[point]:
-                    inpathsToMine.append([src, point])
+                    p = vertices[src]
+                    if (xmax < float(p[0]) or float(p[0]) < xmin) or (ymin > float(p[1]) or float(p[1]) > ymax):
+                        inpathsToMine.append([src, point])
             except KeyError:
                 pass
 
-    print("Points in the viewport: ")
-    print(pointsinPort)
+   # print("Points in the viewport: ")
+    #print(pointsinPort)
     paths = []
     print("Finding paths now. Paths to do: " + str(len(inpathsToMine) +len(outpathsToMine)))
     for path in inpathsToMine: #path[0] = src, path[1] = dest
+
         paths.append(getPath(inboundPaths[path[1]][path[0]][0], edgeDict,[path[1]], [path[0]]))
        # print(path)
         #print(inboundPaths[path[1]])
@@ -96,16 +103,16 @@ for line in dictFormingSemanticTree:
 
 
 print("Done setting up stuff, now pairing and pathing")
-paths = (getViewPortPaths(-40, 40, -40, 40, vertices, outboundPaths,inboundPaths, edgeDictionary))
+paths = (getViewPortPaths(-5, 5, -5, 5, vertices, outboundPaths,inboundPaths, edgeDictionary))
 print(len(paths))
 print("All roads generated. Have a great day! (hehe xd)")
 print(paths[12])
 print(paths[199])
 print(paths[400])
-keys = inboundPaths.keys()
-print(inboundPaths[keys[0]])
+#keys = inboundPaths.keys()
+#print(inboundPaths[keys[0]])
 
-print(outboundPaths[keys[0]])
+#print(outboundPaths[keys[0]])
 newtime = datetime.datetime.now()
 print("Time elapsed: " + str(newtime-oldTime))
 #New implementation preferred: dict[src:dict[dest:[edgeId, weight, ParentID]]] BUT how do we find inbound edges quickly? do we make a reversed one?
