@@ -1,7 +1,7 @@
 import datetime
 import numpy as np
-origVert = open('./DataFiles/Original Vertices.txt', "r")
-semanticTree = open('./DataFiles/output_semanticTreeWiki.txt', "r")
+origVert = open('../simpleData/Original Vertices.txt', "r")
+semanticTree = open('../simpleData/NewSemanticTree.txt', "r")
 
 
 def getPath(childEdgeId, edgeDict, frontStack = [], backStack = []):
@@ -10,13 +10,21 @@ def getPath(childEdgeId, edgeDict, frontStack = [], backStack = []):
     if(len(edgeDict[childEdgeId]) == 4):
         #we still have parents!
         parentID = edgeDict[childEdgeId][2]
-        #frontStack.append(edgeDict[parentID][0])
-        #backStack.insert(0, edgeDict[parentID][1])
         return getPath(parentID, edgeDict, frontStack, backStack)
     elif(len(edgeDict[childEdgeId]) == 3):
         #merge stacks:
-        frontStack.append(backStack)
+        for element in backStack:
+            frontStack = frontStack.append(element)
         return frontStack
+
+def prunePath(unprunedPath):
+    for i in range(0, len(unprunedPath)-2):
+        #note sure if this works
+        edgeWeight = outboundPaths[unprunedPath[i]][unprunedPath[i+1]][1]
+        if int(edgeWeight) < 50:
+            del unprunedPath[i]
+            i-=1
+    return unprunedPath
 
 def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPaths, edgeDict):
     pointsinPort = []
@@ -78,7 +86,7 @@ for line in dictFormingSemanticTree:
     elements = line.split(" ")
     edgeDictionary[elements[0]] = elements[1:] #Edge ID as key,  [src, dest, parent, weight] as vals
     #if both src and dst are in orig Vertices:
-    if(elements[1] in vertices and elements[2] in vertices):
+    if(elements[1] in vertices and elements[2] in vertices): #elements = [edgeId, src, dst, parent, weight]
         #todo: reverify this makes sense. elements[1] is src, elements[2] is dest
         pairings.append((elements[1], elements[2]))
         if len(elements) == 4: #here there's EdgeID, src, dest, weight, here we ARE at the parent
