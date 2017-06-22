@@ -1,6 +1,10 @@
 import datetime
 import numpy as np
 import heapq
+semanticTree = open('../simpleData/NewSemanticTree.txt', "r")
+origVert = open('../simpleData/Original Vertices.txt', "r")
+import csv
+
 
 
 import  csv
@@ -46,11 +50,7 @@ def getPath(childEdgeId, edgeDict, frontStack = [], backStack = [], pathEdgeId= 
         parentID = edgeDict[childEdgeId][2]
         return getPath(parentID, edgeDict, frontStack, backStack, pathEdgeId)
     elif(len(edgeDict[childEdgeId]) == 3):
-        #merge stacks:
-        #frontStack.append(backStack)
-        for ele in backStack:
-           frontStack.append(ele)
-        #frontStack.append(backStack)
+        frontStack = frontStack + backStack
         return frontStack, pathEdgeId
 
 #How to do a fixed size heap?
@@ -63,8 +63,6 @@ def heap_deal(heap_to_check, max_capacity):
     return heap_to_check
 
 
-
-
 def prunePath(unprunedPath):
     for i in range(0, len(unprunedPath)-2):
         #note sure if this works
@@ -75,7 +73,6 @@ def prunePath(unprunedPath):
     return unprunedPath
 
 def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPaths, edgeDict):
-
     pointsinPort = []
     outpathsToMine = []
     inpathsToMine = []
@@ -102,17 +99,11 @@ def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPat
         results = getPath(inboundPaths[path[1]][path[0]][0], edgeDict,[], [], [])
         paths.append(results[0])
         pathsEdgeId.add_all(results[1])
-        #pathsEdgeId =  heap_deal(pathsEdgeId, 10)
-        #print(len(paths))
-        # print(path)
-        #print(inboundPaths[path[1]])
         if(len(paths) % 100000 == 0):
             print(len(paths))
-
     for path in outpathsToMine:
         results = getPath(outboundPaths[path[0]][path[1]][0], edgeDict, [], [], [])
         paths.append(results[0])
-        #pathsEdgeId.append(results[1])
         pathsEdgeId.add_all(results[1])
         if len(paths) % 100000 == 0:
             print(len(paths))
@@ -175,7 +166,6 @@ for line in dictFormingSemanticTree:
                 inboundPaths[elements[2]].update({elements[1]: [elements[0], elements[4], elements[3]]})
             else:
                 inboundPaths[elements[2]] = {elements[1]: [elements[0], elements[4], elements[3]]}
-
 
 print("Done setting up stuff, now pairing and pathing")
 paths, pathsEdgeId, pointsInPort = (getViewPortPaths(-10, 10, -10, 10, vertices, outboundPaths,inboundPaths, edgeDictionary))
