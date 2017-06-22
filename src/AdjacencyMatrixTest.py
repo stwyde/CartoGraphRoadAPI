@@ -1,21 +1,71 @@
 import datetime
 import numpy as np
-origVert = open('../simpleData/Original Vertices.txt', "r")
-semanticTree = open('../simpleData/NewSemanticTree.txt', "r")
+import heapq
 
 
-def getPath(childEdgeId, edgeDict, frontStack = [], backStack = []):
+origVert = open('./DataFiles/Original Vertices.txt', "r")
+semanticTree = open('./DataFiles/output_semanticTreeWiki.txt', "r")
+import csv
+
+
+
+
+class PrioritySet(object):
+    def __init__(self, max_size = 10):
+        self.heap = []
+        self.set = set()
+        self.max_size = max_size
+
+
+    def add(self,  pri, d):
+        if not d in self.set:
+
+            heapq.heappush(self.heap, (pri, d))
+            self.set.add(d)
+            if len(self.heap) > self.max_size:
+                self.pop()
+
+    def pop(self):
+        pri, d = heapq.heappop(self.heap)
+        self.set.remove(d)
+        return d
+
+    def add_all(self, list_to_add):
+        for ele in list_to_add:
+            self.add(ele[0], ele[1])
+
+    def __str__(self):
+        return str(self.heap)
+
+def getPath(childEdgeId, edgeDict, frontStack = [], backStack = [], pathEdgeId= []):
+    pathEdgeId.append((edgeDict[childEdgeId][-1], childEdgeId))
     frontStack.append(edgeDict[childEdgeId][0])
-    backStack.insert(0, edgeDict[childEdgeId][1])
+    if(edgeDict[childEdgeId][0] != edgeDict[childEdgeId][1]):
+        backStack.insert(0, edgeDict[childEdgeId][1])
+
     if(len(edgeDict[childEdgeId]) == 4):
         #we still have parents!
         parentID = edgeDict[childEdgeId][2]
-        return getPath(parentID, edgeDict, frontStack, backStack)
+        return getPath(parentID, edgeDict, frontStack, backStack, pathEdgeId)
     elif(len(edgeDict[childEdgeId]) == 3):
         #merge stacks:
-        for element in backStack:
-            frontStack = frontStack.append(element)
-        return frontStack
+        #frontStack.append(backStack)
+        for ele in backStack:
+           frontStack.append(ele)
+        #frontStack.append(backStack)
+        return frontStack, pathEdgeId
+
+#How to do a fixed size heap?
+def heap_deal(heap_to_check, max_capacity):
+    heapq._heapify_max(heap_to_check)
+    if len(heap_to_check) > max_capacity:
+        heap_to_check = heapq.nlargest(max_capacity, heap_to_check)
+        heapq._heapify_max(heap_to_check)
+        print('here', heap_to_check)
+    return heap_to_check
+
+
+
 
 def prunePath(unprunedPath):
     for i in range(0, len(unprunedPath)-2):
@@ -23,10 +73,11 @@ def prunePath(unprunedPath):
         edgeWeight = outboundPaths[unprunedPath[i]][unprunedPath[i+1]][1]
         if int(edgeWeight) < 50:
             del unprunedPath[i]
-            i-=1
+            i-=1 #Definitely does not work----- not done
     return unprunedPath
 
 def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPaths, edgeDict):
+
     pointsinPort = []
     outpathsToMine = []
     inpathsToMine = []
@@ -46,21 +97,29 @@ def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPat
             except KeyError:
                 pass
 
-   # print("Points in the viewport: ")
-    #print(pointsinPort)
     paths = []
+    pathsEdgeId = PrioritySet(max_size=10)
     print("Finding paths now. Paths to do: " + str(len(inpathsToMine) +len(outpathsToMine)))
     for path in inpathsToMine: #path[0] = src, path[1] = dest
-
-        paths.append(getPath(inboundPaths[path[1]][path[0]][0], edgeDict,[], []))
-       # print(path)
+        results = getPath(inboundPaths[path[1]][path[0]][0], edgeDict,[], [], [])
+        paths.append(results[0])
+        pathsEdgeId.add_all(results[1])
+        #pathsEdgeId =  heap_deal(pathsEdgeId, 10)
+        #print(len(paths))
+        # print(path)
         #print(inboundPaths[path[1]])
         if(len(paths) % 100000 == 0):
             print(len(paths))
+
     for path in outpathsToMine:
-        paths.append(getPath(outboundPaths[path[0]][path[1]][0], edgeDict))
+        results = getPath(outboundPaths[path[0]][path[1]][0], edgeDict, [], [], [])
+        paths.append(results[0])
+        #pathsEdgeId.append(results[1])
+        pathsEdgeId.add_all(results[1])
         if len(paths) % 100000 == 0:
             print(len(paths))
+            print(pathsEdgeId)
+
     return paths
 
 oldTime = datetime.datetime.now()
@@ -110,16 +169,14 @@ for line in dictFormingSemanticTree:
 
 
 print("Done setting up stuff, now pairing and pathing")
-paths = (getViewPortPaths(-20, 20, -20, 20, vertices, outboundPaths,inboundPaths, edgeDictionary))
+paths = (getViewPortPaths(-10, 10, -10, 10, vertices, outboundPaths,inboundPaths, edgeDictionary))
 print(len(paths))
 print("All roads generated. Have a great day! (hehe xd)")
 print(paths[12])
 print(paths[199])
 print(paths[400])
-#keys = inboundPaths.keys()
-#print(inboundPaths[keys[0]])
 
-#print(outboundPaths[keys[0]])
 newtime = datetime.datetime.now()
 print("Time elapsed: " + str(newtime-oldTime))
 #New implementation preferred: dict[src:dict[dest:[edgeId, weight, ParentID]]] BUT how do we find inbound edges quickly? do we make a reversed one?
+
