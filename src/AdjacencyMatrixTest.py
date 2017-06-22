@@ -3,11 +3,8 @@ import numpy as np
 import heapq
 
 
-origVert = open('./DataFiles/Original Vertices.txt', "r")
-semanticTree = open('./DataFiles/output_semanticTreeWiki.txt', "r")
-import csv
-
-
+import  csv
+from FileCreatorForTestViz import FileCreator
 
 
 class PrioritySet(object):
@@ -99,7 +96,7 @@ def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPat
                 pass
 
     paths = []
-    pathsEdgeId = PrioritySet(max_size=50)
+    pathsEdgeId = PrioritySet(max_size=1000)
     print("Finding paths now. Paths to do: " + str(len(inpathsToMine) +len(outpathsToMine)))
     for path in inpathsToMine: #path[0] = src, path[1] = dest
         results = getPath(inboundPaths[path[1]][path[0]][0], edgeDict,[], [], [])
@@ -121,12 +118,23 @@ def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPat
             print(len(paths))
             print(pathsEdgeId)
 
-    return paths, pathsEdgeId
+    return paths, pathsEdgeId, pointsinPort
 
 oldTime = datetime.datetime.now()
+origVert = open('./DataFiles/Original Vertices.txt', "r")
+semanticTree = open('./DataFiles/output_semanticTreeWiki.txt', "r")
+
 origVert = [x.rstrip() for x in origVert]
 semanticTree = [x.rstrip() for x in semanticTree]
 dictFormingSemanticTree = semanticTree
+
+bundledVertices= {}
+with open('./DataFiles/output_edgesWiki.txt') as ptbv:
+    for line in ptbv:
+        lst = line.split()
+        bundledVertices[lst[0]] = lst[1:]
+
+
 del(origVert[0])
 vertices = {}
 #Creates a dict with vertex ID as key, then x/y coordinates as values in array list.
@@ -170,7 +178,7 @@ for line in dictFormingSemanticTree:
 
 
 print("Done setting up stuff, now pairing and pathing")
-paths, pathsEdgeId = (getViewPortPaths(-10, 10, -10, 10, vertices, outboundPaths,inboundPaths, edgeDictionary))
+paths, pathsEdgeId, pointsInPort = (getViewPortPaths(-10, 10, -10, 10, vertices, outboundPaths,inboundPaths, edgeDictionary))
 print(len(paths))
 print("All roads generated. Have a great day! (hehe xd)")
 print(paths[12])
@@ -181,3 +189,7 @@ newtime = datetime.datetime.now()
 print("Time elapsed: " + str(newtime-oldTime))
 #New implementation preferred: dict[src:dict[dest:[edgeId, weight, ParentID]]] BUT how do we find inbound edges quickly? do we make a reversed one?
 
+
+fc = FileCreator()
+
+fc.generateFilesFromSourceDest(pathsEdgeId, vertices, bundledVertices,pointsInPort)
