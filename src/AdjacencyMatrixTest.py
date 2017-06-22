@@ -38,10 +38,11 @@ class PrioritySet(object):
         return str(self.heap)
 
 def getPath(childEdgeId, edgeDict, frontStack = [], backStack = [], pathEdgeId= []):
-    pathEdgeId.append((edgeDict[childEdgeId][-1], childEdgeId))
+    pathEdgeId.append((edgeDict[childEdgeId][-1], (edgeDict[childEdgeId][0],edgeDict[childEdgeId][1])))
     frontStack.append(edgeDict[childEdgeId][0])
     if(edgeDict[childEdgeId][0] != edgeDict[childEdgeId][1]):
         backStack.insert(0, edgeDict[childEdgeId][1])
+
 
     if(len(edgeDict[childEdgeId]) == 4):
         #we still have parents!
@@ -98,7 +99,7 @@ def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPat
                 pass
 
     paths = []
-    pathsEdgeId = PrioritySet(max_size=10)
+    pathsEdgeId = PrioritySet(max_size=50)
     print("Finding paths now. Paths to do: " + str(len(inpathsToMine) +len(outpathsToMine)))
     for path in inpathsToMine: #path[0] = src, path[1] = dest
         results = getPath(inboundPaths[path[1]][path[0]][0], edgeDict,[], [], [])
@@ -120,7 +121,7 @@ def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPat
             print(len(paths))
             print(pathsEdgeId)
 
-    return paths
+    return paths, pathsEdgeId
 
 oldTime = datetime.datetime.now()
 origVert = [x.rstrip() for x in origVert]
@@ -169,13 +170,13 @@ for line in dictFormingSemanticTree:
 
 
 print("Done setting up stuff, now pairing and pathing")
-paths = (getViewPortPaths(-10, 10, -10, 10, vertices, outboundPaths,inboundPaths, edgeDictionary))
+paths, pathsEdgeId = (getViewPortPaths(-10, 10, -10, 10, vertices, outboundPaths,inboundPaths, edgeDictionary))
 print(len(paths))
 print("All roads generated. Have a great day! (hehe xd)")
 print(paths[12])
 print(paths[199])
 print(paths[400])
-
+print("pathsEdge", pathsEdgeId)
 newtime = datetime.datetime.now()
 print("Time elapsed: " + str(newtime-oldTime))
 #New implementation preferred: dict[src:dict[dest:[edgeId, weight, ParentID]]] BUT how do we find inbound edges quickly? do we make a reversed one?
