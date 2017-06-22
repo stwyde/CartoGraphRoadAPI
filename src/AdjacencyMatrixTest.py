@@ -176,7 +176,7 @@ print("All roads generated. Have a great day! (hehe xd)")
 print(paths[12])
 print(paths[199])
 print(paths[400])
-print("pathsEdge", pathsEdgeId)
+print("pathsEdge", str(pathsEdgeId))
 newtime = datetime.datetime.now()
 print("Time elapsed: " + str(newtime-oldTime))
 #New implementation preferred: dict[src:dict[dest:[edgeId, weight, ParentID]]] BUT how do we find inbound edges quickly? do we make a reversed one?
