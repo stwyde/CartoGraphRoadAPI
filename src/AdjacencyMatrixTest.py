@@ -1,9 +1,9 @@
 import datetime
 import numpy as np
 import heapq
-
-
-import  csv
+semanticTree = open('../simpleData/NewSemanticTree.txt', "r")
+origVert = open('../simpleData/OriginalVertices.txt', "r")
+import csv
 from FileCreatorForTestViz import FileCreator
 
 
@@ -50,19 +50,15 @@ def getPath(childEdgeId, edgeDict, frontStack = [], backStack = [], pathEdgeId= 
         return frontStack, pathEdgeId
 
 
-def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPaths, edgeDict, n_cities = 15):
-
+def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPaths, edgeDict, n_cities=5):
     pointsinPort = []
     outpathsToMine = []
     inpathsToMine = []
     for point in vertices:
         if xmax > float(vertices[point][0]) > xmin and ymin < float(vertices[point][1]) < ymax:
             pointsinPort.append(point) #points in port is an array of pointIDs which are strings.
-
     citiesToShowEdges = get_n_most_prominent_cities(n_cities, pointsinPort, articlesZpop)
-
     for city in citiesToShowEdges:
-
             try:
                for dest in outboundPaths[city[1]]:
                   outpathsToMine.append((city[1], dest)) #outpaths and inpaths include points and dest of edges we want to reconstruct
@@ -77,12 +73,12 @@ def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPat
                 pass
 
     paths = []
-    pathsEdgeId = []#PrioritySet(max_size=1000)
-
+    pathsEdgeId = []
     print("Finding paths now. Paths to do: " + str(len(inpathsToMine) +len(outpathsToMine)))
     for path in inpathsToMine: #path[0] = src, path[1] = dest
         results = getPath(inboundPaths[path[1]][path[0]][0], edgeDict,[], [], [])
         paths.append(results[0])
+        print(results[1])
         pathsEdgeId += results[1]
 
         if(len(paths) % 100000 == 0):
@@ -108,29 +104,25 @@ def get_n_most_prominent_cities(n, vertices_in_view_port, articleZpopDict):
         z_pop_score = articleZpopDict[vertex]
         n_cities.add(z_pop_score, vertex)
         counter += 1
-        if counter % 100 == 0:
+        if counter % 1000 == 0:
             print("counter ", counter)
 
     return n_cities.heap
 
 
 oldTime = datetime.datetime.now()
-origVert = open('./DataFiles/Original Vertices.txt', "r")
-semanticTree = open('./DataFiles/output_semanticTreeWiki.txt', "r")
 
 origVert = [x.rstrip() for x in origVert]
 semanticTree = [x.rstrip() for x in semanticTree]
 dictFormingSemanticTree = semanticTree
 
 bundledVertices= {}
-with open('./DataFiles/output_verticesWiki.txt') as ptbv:
+with open('../simpleData/output_verticesWiki.txt') as ptbv:
     for line in ptbv:
         lst = line.split()
         bundledVertices[lst[0]] = lst[1:]
-
-
 articlesZpop = {}
-with open('./DataFiles/zpop.tsv', "r") as zpop:
+with open('../simpleData/zpop.tsv', "r") as zpop:
     for line in zpop:
         lst = line.split()
         articlesZpop[lst[0]] = lst[1]
@@ -146,7 +138,6 @@ outboundPaths = {}
 edgeDictionary = {}
 #inboundPaths is a dictinary where the key is a vertex and the values are an array which is composed of all the values which have roads going into the key value. This is the reverse of outboundPaths where the key has outbound roads to the values
 inboundPaths = {}
-#Todo: set pairings to be the new fangled dictionary thingamabobber
 pairings = []
 print("Making the three dictionaries now!")
 for line in dictFormingSemanticTree:
@@ -154,7 +145,6 @@ for line in dictFormingSemanticTree:
     edgeDictionary[elements[0]] = elements[1:] #Edge ID as key,  [src, dest, parent, weight] as vals
     #if both src and dst are in orig Vertices:
     if(elements[1] in vertices and elements[2] in vertices): #elements = [edgeId, src, dst, parent, weight]
-        #todo: reverify this makes sense. elements[1] is src, elements[2] is dest
         pairings.append((elements[1], elements[2]))
         if len(elements) == 4: #here there's EdgeID, src, dest, weight, here we ARE at the parent
             if elements[1] in outboundPaths:
@@ -177,12 +167,9 @@ for line in dictFormingSemanticTree:
 
 
 print("Done setting up stuff, now pairing and pathing")
-paths, pathsEdgeId, pointsInPort = (getViewPortPaths(-5, 5, -5, 5, vertices, outboundPaths,inboundPaths, edgeDictionary))
+paths, pathsEdgeId, pointsInPort = (getViewPortPaths(-7, 7, -7, 7, vertices, outboundPaths,inboundPaths, edgeDictionary))
 print(len(paths))
 print("All roads generated. Have a great day! (hehe xd)")
-#print(paths[12])
-#print(paths[199])
-#print(paths[400])
 print("pathsEdge", str(pathsEdgeId))
 newtime = datetime.datetime.now()
 print("Time elapsed: " + str(newtime-oldTime))
@@ -191,4 +178,5 @@ print("Time elapsed: " + str(newtime-oldTime))
 
 fc = FileCreator()
 
-fc.generateFilesFromSourceDest(pathsEdgeId, vertices, bundledVertices,pointsInPort)
+#fc.generateFilesFromSourceDest(pathsEdgeId, vertices, bundledVertices)
+fc.generateFilesFromSourceDest1(vertices,bundledVertices, paths)
