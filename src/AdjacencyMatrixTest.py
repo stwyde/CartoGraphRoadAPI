@@ -35,27 +35,19 @@ class PrioritySet(object):
         return str(self.heap)
 
 def getPath(childEdgeId, edgeDict, frontStack = [], backStack = [], pathEdgeId= []):
-    repeated = []
+    pathEdgeId.append((edgeDict[childEdgeId][-1], (edgeDict[childEdgeId][0],edgeDict[childEdgeId][1])))
     frontStack.append(edgeDict[childEdgeId][0])
     if(edgeDict[childEdgeId][0] != edgeDict[childEdgeId][1]):
         backStack.insert(0, edgeDict[childEdgeId][1])
         pathEdgeId.append((edgeDict[childEdgeId][-1], (edgeDict[childEdgeId][0], edgeDict[childEdgeId][1])))
-    else:
-        if (len(edgeDict[childEdgeId]) == 4):
-            repeated.append((childEdgeId, edgeDict[childEdgeId][-1], edgeDict[childEdgeId][-2]))
-        else:
-            repeated.append((childEdgeId, edgeDict[childEdgeId][-1]))
+
     if(len(edgeDict[childEdgeId]) == 4):
         #we still have parents!
         parentID = edgeDict[childEdgeId][2]
         return getPath(parentID, edgeDict, frontStack, backStack, pathEdgeId)
     elif(len(edgeDict[childEdgeId]) == 3):
-        #merge stacks:
-        #frontStack.append(backStack)
-        for ele in backStack:
-           frontStack.append(ele)
-        #frontStack.append(backStack)
-        return frontStack, pathEdgeId, repeated
+        frontStack = frontStack + backStack
+        return frontStack, pathEdgeId
 
 
 def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPaths, edgeDict, n_cities = 15):
@@ -63,9 +55,6 @@ def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPat
     pointsinPort = []
     outpathsToMine = []
     inpathsToMine = []
-
-
-
     for point in vertices:
         if xmax > float(vertices[point][0]) > xmin and ymin < float(vertices[point][1]) < ymax:
             pointsinPort.append(point) #points in port is an array of pointIDs which are strings.
@@ -199,7 +188,7 @@ newtime = datetime.datetime.now()
 print("Time elapsed: " + str(newtime-oldTime))
 #New implementation preferred: dict[src:dict[dest:[edgeId, weight, ParentID]]] BUT how do we find inbound edges quickly? do we make a reversed one?
 
-#print(repetead)
+
 fc = FileCreator()
 
-fc.generateFilesFromSourceDest(pathsEdgeId, vertices, bundledVertices,pointsInPort, repetead)
+fc.generateFilesFromSourceDest(pathsEdgeId, vertices, bundledVertices,pointsInPort)
