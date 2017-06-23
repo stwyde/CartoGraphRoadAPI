@@ -50,7 +50,7 @@ def getPath(childEdgeId, edgeDict, frontStack = [], backStack = [], pathEdgeId= 
         return frontStack, pathEdgeId
 
 
-def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPaths, edgeDict, n_cities=5):
+def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPaths, edgeDict, n_cities=1):
     pointsinPort = []
     outpathsToMine = []
     inpathsToMine = []
@@ -58,6 +58,7 @@ def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPat
         if xmax > float(vertices[point][0]) > xmin and ymin < float(vertices[point][1]) < ymax:
             pointsinPort.append(point) #points in port is an array of pointIDs which are strings.
     citiesToShowEdges = get_n_most_prominent_cities(n_cities, pointsinPort, articlesZpop)
+    print("cities", citiesToShowEdges)
     for city in citiesToShowEdges:
             try:
                for dest in outboundPaths[city[1]]:
@@ -103,7 +104,7 @@ def get_n_most_prominent_cities(n, vertices_in_view_port, articleZpopDict):
         z_pop_score = articleZpopDict[vertex]
         n_cities.add(-float(z_pop_score), vertex)
         counter += 1
-        if counter % 1000 == 0:
+        if counter % 10000 == 0:
             print("counter ", counter)
 
     return n_cities.heap
@@ -166,7 +167,8 @@ for line in dictFormingSemanticTree:
 
 
 print("Done setting up stuff, now pairing and pathing")
-paths, pathsEdgeId, pointsInPort = (getViewPortPaths(-7, 7, -7, 7, vertices, outboundPaths,inboundPaths, edgeDictionary))
+dimensionVal = 35
+paths, pathsEdgeId, pointsInPort = (getViewPortPaths(-dimensionVal, dimensionVal, -dimensionVal, dimensionVal, vertices, outboundPaths,inboundPaths, edgeDictionary))
 print(len(paths))
 print("All roads generated. Have a great day! (hehe xd)")
 print("pathsEdge", str(pathsEdgeId))
