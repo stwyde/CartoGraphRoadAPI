@@ -78,7 +78,6 @@ def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPat
     for path in inpathsToMine: #path[0] = src, path[1] = dest
         results = getPath(inboundPaths[path[1]][path[0]][0], edgeDict,[], [], [])
         paths.append(results[0])
-        print(results[1])
         pathsEdgeId += results[1]
 
         if(len(paths) % 100000 == 0):
@@ -102,7 +101,7 @@ def get_n_most_prominent_cities(n, vertices_in_view_port, articleZpopDict):
     counter = 0
     for vertex in vertices_in_view_port:
         z_pop_score = articleZpopDict[vertex]
-        n_cities.add(z_pop_score, vertex)
+        n_cities.add(-float(z_pop_score), vertex)
         counter += 1
         if counter % 1000 == 0:
             print("counter ", counter)
