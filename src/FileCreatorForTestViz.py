@@ -1,13 +1,12 @@
 import csv
 class FileCreator():
-    def generateFilesFromSourceDest(self, edgesList, verticeDic, bundledVerticeList, pointsInPort, repetead):
+    def generateFilesFromSourceDest(self, edgesList, verticeDic, bundledVerticeList, pointsInPort):
         verticeOutput = open("./verticeForTest.txt", 'w')
         verticeOutputWriter = csv.writer(verticeOutput, delimiter = ' ')
 
         edgeOutput = open("./edgesForTest.txt", 'w')
         edgeOutputWriter = csv.writer(edgeOutput, delimiter = ' ')
-      #  rep = open("./repeated.txt", 'w')
-     #   reapWriter  = csv.writer(rep, delimiter = ' ')
+
         print("Starting here")
         for edge_info in edgesList:
             weight = edge_info[0]
@@ -26,9 +25,7 @@ class FileCreator():
       #  for point in pointsInPort:
       #      verticeOutputWriter.writerow([point, verticeDic[point][0], verticeDic[point][1]])
 
-       # reapWriter.writerow([len(repetead)])
-       # for edge in repetead:
-        #    reapWriter.writerow(edge)
+
         print("Done Here")
         verticeOutput.close()
         edgeOutput.close()

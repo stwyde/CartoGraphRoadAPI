@@ -35,7 +35,7 @@ class PrioritySet(object):
         return str(self.heap)
 
 def getPath(childEdgeId, edgeDict, frontStack = [], backStack = [], pathEdgeId= []):
-    pathEdgeId.append((edgeDict[childEdgeId][-1], (edgeDict[childEdgeId][0],edgeDict[childEdgeId][1])))
+
     frontStack.append(edgeDict[childEdgeId][0])
     if(edgeDict[childEdgeId][0] != edgeDict[childEdgeId][1]):
         backStack.insert(0, edgeDict[childEdgeId][1])
@@ -78,13 +78,13 @@ def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPat
 
     paths = []
     pathsEdgeId = []#PrioritySet(max_size=1000)
-    repetead = []
+
     print("Finding paths now. Paths to do: " + str(len(inpathsToMine) +len(outpathsToMine)))
     for path in inpathsToMine: #path[0] = src, path[1] = dest
         results = getPath(inboundPaths[path[1]][path[0]][0], edgeDict,[], [], [])
         paths.append(results[0])
         pathsEdgeId += results[1]
-        repetead.append(results[2])
+
         if(len(paths) % 100000 == 0):
             print(len(paths))
 
@@ -93,12 +93,12 @@ def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPat
         paths.append(results[0])
         #pathsEdgeId.append(results[1])
         pathsEdgeId += results[1]
-        repetead.append(results[2])
+
         if len(paths) % 100000 == 0:
             print(len(paths))
             print(pathsEdgeId)
 
-    return paths, pathsEdgeId, pointsinPort, repetead
+    return paths, pathsEdgeId, pointsinPort
 
 def get_n_most_prominent_cities(n, vertices_in_view_port, articleZpopDict):
     n_cities = PrioritySet(max_size=n)
@@ -177,7 +177,7 @@ for line in dictFormingSemanticTree:
 
 
 print("Done setting up stuff, now pairing and pathing")
-paths, pathsEdgeId, pointsInPort, repetead = (getViewPortPaths(-5, 5, -5, 5, vertices, outboundPaths,inboundPaths, edgeDictionary))
+paths, pathsEdgeId, pointsInPort = (getViewPortPaths(-5, 5, -5, 5, vertices, outboundPaths,inboundPaths, edgeDictionary))
 print(len(paths))
 print("All roads generated. Have a great day! (hehe xd)")
 #print(paths[12])
