@@ -1,9 +1,9 @@
 import datetime
 import numpy as np
 import heapq
-semanticTree = open('../simpleData/NewSemanticTree.txt', "r")
-origVert = open('../simpleData/OriginalVertices.txt', "r")
-import csv
+
+
+import  csv
 from FileCreatorForTestViz import FileCreator
 
 
@@ -50,16 +50,19 @@ def getPath(childEdgeId, edgeDict, frontStack = [], backStack = [], pathEdgeId= 
         return frontStack, pathEdgeId
 
 
-def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPaths, edgeDict, n_cities=1):
+def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPaths, edgeDict, n_cities = 10):
+
     pointsinPort = []
     outpathsToMine = []
     inpathsToMine = []
     for point in vertices:
         if xmax > float(vertices[point][0]) > xmin and ymin < float(vertices[point][1]) < ymax:
             pointsinPort.append(point) #points in port is an array of pointIDs which are strings.
+
     citiesToShowEdges = get_n_most_prominent_cities(n_cities, pointsinPort, articlesZpop)
     print("cities", citiesToShowEdges)
     for city in citiesToShowEdges:
+
             try:
                for dest in outboundPaths[city[1]]:
                   outpathsToMine.append((city[1], dest)) #outpaths and inpaths include points and dest of edges we want to reconstruct
@@ -92,7 +95,6 @@ def getViewPortPaths(xmin, xmax, ymin, ymax, vertices, outboundPaths, inboundPat
 
         if len(paths) % 100000 == 0:
             print(len(paths))
-            print(pathsEdgeId)
 
     return paths, pathsEdgeId, pointsinPort
 
@@ -103,26 +105,31 @@ def get_n_most_prominent_cities(n, vertices_in_view_port, articleZpopDict):
     for vertex in vertices_in_view_port:
         z_pop_score = articleZpopDict[vertex]
         n_cities.add(-float(z_pop_score), vertex)
+
         counter += 1
-        if counter % 10000 == 0:
+        if counter % 1000 == 0:
             print("counter ", counter)
 
     return n_cities.heap
 
 
 oldTime = datetime.datetime.now()
+origVert = open('./DataFiles/Original Vertices.txt', "r")
+semanticTree = open('./DataFiles/output_semanticTreeWiki.txt', "r")
 
 origVert = [x.rstrip() for x in origVert]
 semanticTree = [x.rstrip() for x in semanticTree]
 dictFormingSemanticTree = semanticTree
 
 bundledVertices= {}
-with open('../simpleData/output_verticesWiki.txt') as ptbv:
+with open('./DataFiles/output_verticesWiki.txt') as ptbv:
     for line in ptbv:
         lst = line.split()
         bundledVertices[lst[0]] = lst[1:]
+
+
 articlesZpop = {}
-with open('../simpleData/zpop.tsv', "r") as zpop:
+with open('./DataFiles/zpop.tsv', "r") as zpop:
     for line in zpop:
         lst = line.split()
         articlesZpop[lst[0]] = lst[1]
@@ -138,6 +145,7 @@ outboundPaths = {}
 edgeDictionary = {}
 #inboundPaths is a dictinary where the key is a vertex and the values are an array which is composed of all the values which have roads going into the key value. This is the reverse of outboundPaths where the key has outbound roads to the values
 inboundPaths = {}
+
 pairings = []
 print("Making the three dictionaries now!")
 for line in dictFormingSemanticTree:
@@ -167,11 +175,11 @@ for line in dictFormingSemanticTree:
 
 
 print("Done setting up stuff, now pairing and pathing")
-dimensionVal = 35
+dimensionVal = 40
 paths, pathsEdgeId, pointsInPort = (getViewPortPaths(-dimensionVal, dimensionVal, -dimensionVal, dimensionVal, vertices, outboundPaths,inboundPaths, edgeDictionary))
 print(len(paths))
 print("All roads generated. Have a great day! (hehe xd)")
-print("pathsEdge", str(pathsEdgeId))
+#print("pathsEdge", str(pathsEdgeId))
 newtime = datetime.datetime.now()
 print("Time elapsed: " + str(newtime-oldTime))
 #New implementation preferred: dict[src:dict[dest:[edgeId, weight, ParentID]]] BUT how do we find inbound edges quickly? do we make a reversed one?
@@ -180,4 +188,4 @@ print("Time elapsed: " + str(newtime-oldTime))
 fc = FileCreator()
 
 #fc.generateFilesFromSourceDest(pathsEdgeId, vertices, bundledVertices)
-fc.generateFilesFromSourceDest1(vertices,bundledVertices, paths)
+fc.generateFilesFromSourceDest1(vertices,bundledVertices, paths, pointsInPort)
