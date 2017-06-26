@@ -105,37 +105,41 @@ class PathRetriever():
                             inboundPaths[elements[2]] = {elements[1]: [elements[0], elements[4], elements[3]]}
         return edgeDictionary, inboundPaths, outboundPaths
 
-    def getPath(self, childEdgeId, edgeDict, frontStack = [], backStack = [], pathEdgeId= []):
+
+    def getPath(self, childEdgeId, edgeDict, frontStack = [], backStack = []):
         frontStack.append(edgeDict[childEdgeId][0])
         backStack.insert(0, edgeDict[childEdgeId][1])
 
-        if(edgeDict[childEdgeId][0] != edgeDict[childEdgeId][1]):
+      #  if(edgeDict[childEdgeId][0] != edgeDict[childEdgeId][1]):
          #   frontStack.append(edgeDict[childEdgeId][0])
         #    backStack.insert(0, edgeDict[childEdgeId][1])
-            pathEdgeId.append((edgeDict[childEdgeId][-1], (edgeDict[childEdgeId][0], edgeDict[childEdgeId][1])))
+
 
         if(len(edgeDict[childEdgeId]) == 4):
             #we still have parents!
             parentID = edgeDict[childEdgeId][2]
-            return self.getPath(parentID, edgeDict, frontStack, backStack, pathEdgeId)
+            return self.getPath(parentID, edgeDict, frontStack, backStack)
         elif(len(edgeDict[childEdgeId]) == 3):
             frontStack = frontStack + backStack
-            return frontStack, pathEdgeId
+            return frontStack
 
     def get_n_most_prominent_cities(self, n, vertices_in_view_port):
         n_cities = PrioritySet(max_size=n)
-        print("n_of_vertex", len(vertices_in_view_port))
-        counter = 0
-        for vertex in vertices_in_view_port:
 
+        for vertex in vertices_in_view_port:
             z_pop_score = self.articlesZpop[vertex]
             n_cities.add(-float(z_pop_score), vertex)
 
-            counter += 1
-            if counter % 1000 == 0:
-                print("counter ", counter)
 
         return n_cities.heap
+    def edgeShouldShow(self,  src, dest, threshold = 10,):
+        srcZpop = float(self.articlesZpop[src])
+        destZpop = float(self.articlesZpop[dest])
+
+        if srcZpop * destZpop > threshold:
+            return False
+        else:
+            return True
 
     def getPathsInViewPort(self, xmin, xmax, ymin, ymax, n_cities = 10):
         pointsinPort = []
@@ -144,8 +148,8 @@ class PathRetriever():
             if xmax > float(self.originalVertices[point][0]) > xmin and ymin < float(self.originalVertices[point][1]) < ymax:
                 pointsinPort.append(point)  # points in port is an array of pointIDs which are strings.
         cities = self.get_n_most_prominent_cities(n_cities, pointsinPort)
-        paths, pathsEdgeId = self.getPathsForEachCity(cities, xmin, xmax, ymin, ymax )
-        return paths, pathsEdgeId, pointsinPort
+        paths = self.getPathsForEachCity(cities, xmin, xmax, ymin, ymax )
+        return paths, pointsinPort
 
     def getPathsForEachCity(self, citiesToShowEdges, xmin, xmax, ymin, ymax,):
         outpathsToMine = []
@@ -154,49 +158,46 @@ class PathRetriever():
 
             if city[1] in self.outboundPaths:
                 for dest in self.outboundPaths[city[1]]:
-
-                    outpathsToMine.append(
-                        (city[1], dest))  # outpaths and inpaths include points and dest of edges we want to reconstruct
+                    if self.edgeShouldShow(city[1], dest, threshold= 2):
+                        outpathsToMine.append(
+                            (city[1], dest))  # outpaths and inpaths include points and dest of edges we want to reconstruct
 
             if city[1] in self.inboundPaths:
                 for src in self.inboundPaths[city[1]]:
 
                     p = self.originalVertices[src]
                     if (xmax < float(p[0]) or float(p[0]) < xmin) or (ymin > float(p[1]) or float(p[1]) > ymax):
-                        inpathsToMine.append([src, city[1]])
+                      # pass
+                        if self.edgeShouldShow(src, city[1], threshold= 2):
+                            inpathsToMine.append([src, city[1]])
 
         paths = []
-        pathsEdgeId = []
+
         print("Finding paths now. Paths to do: " + str(len(inpathsToMine) + len(outpathsToMine)))
         for path in inpathsToMine:  # path[0] = src, path[1] = dest
-            results = self.getPath(self.inboundPaths[path[1]][path[0]][0], self.edgeDictionary, [], [], [])
-            paths.append(results[0])
-            pathsEdgeId += results[1]
+            results = self.getPath(self.inboundPaths[path[1]][path[0]][0], self.edgeDictionary, [], [])
+            paths.append(results)
 
             if (len(paths) % 100000 == 0):
                 print(len(paths))
 
         for path in outpathsToMine:
-
-            results = self.getPath(self.outboundPaths[path[0]][path[1]][0], self.edgeDictionary, [], [], [])
-            paths.append(results[0])
-            # pathsEdgeId.append(results[1])
-            pathsEdgeId += results[1]
+            results = self.getPath(self.outboundPaths[path[0]][path[1]][0], self.edgeDictionary, [], [])
+            paths.append(results)
 
             if len(paths) % 100000 == 0:
                 print(len(paths))
-
-        return paths, pathsEdgeId
+        return paths
 
 
 
 
 fc = FileCreator()
-dimensionVal = 5
+dimensionVal =40
 oldTime = datetime.datetime.now()
 test = PathRetriever()
 
-paths, pathsEdgeId, pointsInPort = test.getPathsInViewPort(-dimensionVal, dimensionVal, -dimensionVal, dimensionVal, n_cities=1)
+paths, pointsInPort = test.getPathsInViewPort(-dimensionVal, dimensionVal, -dimensionVal, dimensionVal, n_cities=10)
 
 
 newtime = datetime.datetime.now()

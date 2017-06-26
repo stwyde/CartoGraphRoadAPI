@@ -38,12 +38,11 @@ class FileCreator():
         duplicateCatcher = set()
         duplicateEdgeCatcher = set()
         print("Starting here")
-        count = -1
-        for path in paths:
-            count += 1
-            if count <= 0: continue
 
-            print("paht", path)
+        for path in paths:
+
+            print "path", path
+           # print("paht", path)
             for i in range(0, len(path)-2):
                 src = path[i]
                 dest = path[i+1]
@@ -61,13 +60,12 @@ class FileCreator():
                         verticeOutputWriter.writerow([dest, bundledVerticeList[dest][0], bundledVerticeList[dest][1]])
                     duplicateCatcher.add(dest)
                 if (src, dest) not in duplicateEdgeCatcher:
-                    print("w", bundledEdges[(src,dest)])
 
                     weight = min(int(bundledEdges[(src,dest)]), 50)
                     edgeOutputWriter.writerow([src, dest, weight])
                     duplicateEdgeCatcher.add((src, dest, weight))
-      #  for point in pointsInPort:
-       #      verticeOutputWriter.writerow([point, verticeDic[point][0], verticeDic[point][1]])
+       # for point in pointsInPort:
+        #     verticeOutputWriter.writerow([point, verticeDic[point][0], verticeDic[point][1]])
 
 
         print("Done Here")
