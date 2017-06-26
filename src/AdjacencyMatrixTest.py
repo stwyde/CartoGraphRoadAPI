@@ -63,6 +63,12 @@ class PathRetriever():
                 self.originalVertices[lst[0]] = lst[1:]
         self.edgeDictionary, self.inboundPaths, self.outboundPaths = self.__getEdgeDictionaries(pathToSemanticTree)
 
+        self.bundledEdges = {}
+        with open(pathToBundledEdges) as pte:
+            for line in pte:
+                lst = line.split()
+                self.bundledEdges[(lst[0], lst[1])] = lst[2]
+
     def __getEdgeDictionaries(self, pathToSemanticTree):
         outboundPaths = {}
         edgeDictionary = {}
@@ -100,10 +106,12 @@ class PathRetriever():
         return edgeDictionary, inboundPaths, outboundPaths
 
     def getPath(self, childEdgeId, edgeDict, frontStack = [], backStack = [], pathEdgeId= []):
-
         frontStack.append(edgeDict[childEdgeId][0])
+        backStack.insert(0, edgeDict[childEdgeId][1])
+
         if(edgeDict[childEdgeId][0] != edgeDict[childEdgeId][1]):
-            backStack.insert(0, edgeDict[childEdgeId][1])
+         #   frontStack.append(edgeDict[childEdgeId][0])
+        #    backStack.insert(0, edgeDict[childEdgeId][1])
             pathEdgeId.append((edgeDict[childEdgeId][-1], (edgeDict[childEdgeId][0], edgeDict[childEdgeId][1])))
 
         if(len(edgeDict[childEdgeId]) == 4):
@@ -184,17 +192,14 @@ class PathRetriever():
 
 
 fc = FileCreator()
-
-#fc.generateFilesFromSourceDest(pathsEdgeId, vertices, bundledVertices)
-#fc.generateFilesFromSourceDest1(vertices,bundledVertices, paths, pointsInPort)
-
-dimensionVal = 40
+dimensionVal = 5
 oldTime = datetime.datetime.now()
 test = PathRetriever()
 
-paths, pathsEdgeId, pointsInPort = test.getPathsInViewPort(-dimensionVal, dimensionVal, -dimensionVal, dimensionVal)
+paths, pathsEdgeId, pointsInPort = test.getPathsInViewPort(-dimensionVal, dimensionVal, -dimensionVal, dimensionVal, n_cities=1)
 
 
 newtime = datetime.datetime.now()
 print("Time elapsed: " + str(newtime-oldTime))
-fc.generateFilesFromSourceDest1(test.originalVertices, test.bundledVertices, paths, pointsInPort)
+
+fc.generateFilesFromSourceDest1(test.originalVertices, test.bundledVertices, paths, pointsInPort, test.bundledEdges)

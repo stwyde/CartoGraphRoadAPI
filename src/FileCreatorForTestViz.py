@@ -29,7 +29,7 @@ class FileCreator():
         verticeOutput.close()
         edgeOutput.close()
 
-    def generateFilesFromSourceDest1(self, verticeDic, bundledVerticeList, paths, pointsInPort):
+    def generateFilesFromSourceDest1(self, verticeDic, bundledVerticeList, paths, pointsInPort, bundledEdges):
         verticeOutput = open("./verticeForTest.txt", 'w')
         verticeOutputWriter = csv.writer(verticeOutput, delimiter = ' ')
 
@@ -38,10 +38,16 @@ class FileCreator():
         duplicateCatcher = set()
         duplicateEdgeCatcher = set()
         print("Starting here")
+        count = -1
         for path in paths:
+            count += 1
+            if count <= 0: continue
+
+            print("paht", path)
             for i in range(0, len(path)-2):
                 src = path[i]
                 dest = path[i+1]
+                if src == dest: continue
                 if src not in duplicateCatcher:
                     if src in verticeDic:
                         verticeOutputWriter.writerow([src, verticeDic[src][0], verticeDic[src][1]])
@@ -55,10 +61,13 @@ class FileCreator():
                         verticeOutputWriter.writerow([dest, bundledVerticeList[dest][0], bundledVerticeList[dest][1]])
                     duplicateCatcher.add(dest)
                 if (src, dest) not in duplicateEdgeCatcher:
-                    edgeOutputWriter.writerow([src, dest, "4"])
-                    duplicateEdgeCatcher.add((src, dest))
-        for point in pointsInPort:
-             verticeOutputWriter.writerow([point, verticeDic[point][0], verticeDic[point][1]])
+                    print("w", bundledEdges[(src,dest)])
+
+                    weight = min(int(bundledEdges[(src,dest)]), 50)
+                    edgeOutputWriter.writerow([src, dest, weight])
+                    duplicateEdgeCatcher.add((src, dest, weight))
+      #  for point in pointsInPort:
+       #      verticeOutputWriter.writerow([point, verticeDic[point][0], verticeDic[point][1]])
 
 
         print("Done Here")
