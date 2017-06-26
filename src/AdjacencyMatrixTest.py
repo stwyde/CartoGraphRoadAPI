@@ -132,7 +132,16 @@ class PathRetriever():
 
 
         return n_cities.heap
+
+
     def edgeShouldShow(self,  src, dest, threshold = 10,):
+        '''
+        If product of the zpop score of the two articles is greater than a threshold the edge should not show
+        :param src:
+        :param dest:
+        :param threshold:
+        :return:
+        '''
         srcZpop = float(self.articlesZpop[src])
         destZpop = float(self.articlesZpop[dest])
 
