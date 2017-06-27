@@ -61,7 +61,7 @@ class FileCreator():
                     duplicateCatcher.add(dest)
                 if (src, dest) not in duplicateEdgeCatcher:
 
-                    weight = min(int(bundledEdges[(src,dest)]), 50)
+                    weight = min(int(bundledEdges[(src,dest)]), 70)
                     edgeOutputWriter.writerow([src, dest, weight])
                     duplicateEdgeCatcher.add((src, dest, weight))
        # for point in pointsInPort:

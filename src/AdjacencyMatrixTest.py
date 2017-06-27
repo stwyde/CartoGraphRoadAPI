@@ -134,9 +134,9 @@ class PathRetriever():
         return n_cities.heap
 
 
-    def edgeShouldShow(self,  src, dest, threshold = 10,):
+    def edgeShouldShow(self,  src, dest, threshold = 2):
         '''
-        If product of the zpop score of the two articles is greater than a threshold the edge should not show
+        If sum of the zpop score of the two articles is greater than a threshold the edge should not show
         :param src:
         :param dest:
         :param threshold:
@@ -145,7 +145,7 @@ class PathRetriever():
         srcZpop = float(self.articlesZpop[src])
         destZpop = float(self.articlesZpop[dest])
 
-        if srcZpop * destZpop > threshold:
+        if srcZpop + destZpop > threshold:
             return False
         else:
             return True
@@ -202,11 +202,11 @@ class PathRetriever():
 
 
 fc = FileCreator()
-dimensionVal =40
+dimensionVal = 10
 oldTime = datetime.datetime.now()
 test = PathRetriever()
 
-paths, pointsInPort = test.getPathsInViewPort(-dimensionVal, dimensionVal, -dimensionVal, dimensionVal, n_cities=10)
+paths, pointsInPort = test.getPathsInViewPort(-dimensionVal, dimensionVal, -dimensionVal, dimensionVal, n_cities=20)
 
 
 newtime = datetime.datetime.now()
