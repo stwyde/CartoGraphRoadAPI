@@ -40,7 +40,7 @@ class PathRetriever():
                  pathToBundledEdges='./DataFiles/output_edgesWiki.txt',
                  pathToOriginalVertices='./DataFiles/Original Vertices.txt',
                  pathToOriginalEdges='./DataFiles/OriginalEdges.txt',
-                 pathToSemanticTree='./DataFiles/output_semanticTreeWiki.txt',
+                 pathToSemanticTree='./DataFiles/NewSemanticTree.txt',
                  pathToZPop = './DataFiles/zpop.tsv'):
 
         self.bundledVertices = {}
@@ -62,6 +62,7 @@ class PathRetriever():
                 if len(lst) == 1: continue
                 self.originalVertices[lst[0]] = lst[1:]
         self.edgeDictionary, self.inboundPaths, self.outboundPaths = self.__getEdgeDictionaries(pathToSemanticTree)
+        self.edgeMax = self.getMaxWeight(pathToBundledEdges)
 
         self.bundledEdges = {}
         with open(pathToBundledEdges) as pte:
@@ -105,6 +106,14 @@ class PathRetriever():
                             inboundPaths[elements[2]] = {elements[1]: [elements[0], elements[4], elements[3]]}
         return edgeDictionary, inboundPaths, outboundPaths
 
+    def getMaxWeight(self, pathToBundledEdges):
+        maxWeight = 1
+        with open(pathToBundledEdges, 'r') as edges:
+            for edge in edges:
+                a,b,c = edge.split(" ")
+                if int(c) > maxWeight:
+                    maxWeight = c
+        return maxWeight
 
     def getPath(self, childEdgeId, edgeDict, frontStack = [], backStack = []):
         frontStack.append(edgeDict[childEdgeId][0])
@@ -134,7 +143,7 @@ class PathRetriever():
         return n_cities.heap
 
 
-    def edgeShouldShow(self,  src, dest, threshold = 2):
+    def edgeShouldShow(self,  src, dest, threshold = 3):
         '''
         If sum of the zpop score of the two articles is greater than a threshold the edge should not show
         :param src:
@@ -163,11 +172,12 @@ class PathRetriever():
     def getPathsForEachCity(self, citiesToShowEdges, xmin, xmax, ymin, ymax,):
         outpathsToMine = []
         inpathsToMine = []
+        threshholdval = 20
         for city in citiesToShowEdges:
 
             if city[1] in self.outboundPaths:
                 for dest in self.outboundPaths[city[1]]:
-                    if self.edgeShouldShow(city[1], dest, threshold= 2):
+                    if self.edgeShouldShow(city[1], dest, threshold= threshholdval):
                         outpathsToMine.append(
                             (city[1], dest))  # outpaths and inpaths include points and dest of edges we want to reconstruct
 
@@ -177,7 +187,7 @@ class PathRetriever():
                     p = self.originalVertices[src]
                     if (xmax < float(p[0]) or float(p[0]) < xmin) or (ymin > float(p[1]) or float(p[1]) > ymax):
                       # pass
-                        if self.edgeShouldShow(src, city[1], threshold= 2):
+                        if self.edgeShouldShow(src, city[1], threshold= threshholdval):
                             inpathsToMine.append([src, city[1]])
 
         paths = []
@@ -202,14 +212,15 @@ class PathRetriever():
 
 
 fc = FileCreator()
-dimensionVal = 10
+dimensionVal = 5
 oldTime = datetime.datetime.now()
 test = PathRetriever()
 
-paths, pointsInPort = test.getPathsInViewPort(-dimensionVal, dimensionVal, -dimensionVal, dimensionVal, n_cities=20)
+paths, pointsInPort = test.getPathsInViewPort(-dimensionVal, dimensionVal, -dimensionVal, dimensionVal, n_cities=2)
 
 
 newtime = datetime.datetime.now()
 print("Time elapsed: " + str(newtime-oldTime))
-
-fc.generateFilesFromSourceDest1(test.originalVertices, test.bundledVertices, paths, pointsInPort, test.bundledEdges)
+maxWeight = test.edgeMax
+print maxWeight
+fc.generateFilesFromSourceDest1(test.originalVertices, test.bundledVertices, paths, pointsInPort, test.bundledEdges, maxWeight)

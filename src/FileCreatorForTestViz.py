@@ -1,10 +1,11 @@
 import csv
+from math import log
 class FileCreator():
     def generateFilesFromSourceDest(self, edgesList, verticeDic, bundledVerticeList, pointsInPort =[]):
-        verticeOutput = open("./verticeForTest.txt", 'w')
+        verticeOutput = open("./simpleData/verticeForTest.txt", 'w')
         verticeOutputWriter = csv.writer(verticeOutput, delimiter = ' ')
 
-        edgeOutput = open("./edgesForTest.txt", 'w')
+        edgeOutput = open("./simpleData/edgesForTest.txt", 'w')
         edgeOutputWriter = csv.writer(edgeOutput, delimiter = ' ')
 
         print("Starting here")
@@ -29,11 +30,11 @@ class FileCreator():
         verticeOutput.close()
         edgeOutput.close()
 
-    def generateFilesFromSourceDest1(self, verticeDic, bundledVerticeList, paths, pointsInPort, bundledEdges):
-        verticeOutput = open("./verticeForTest.txt", 'w')
+    def generateFilesFromSourceDest1(self, verticeDic, bundledVerticeList, paths, pointsInPort, bundledEdges, edgeMaxWeight):
+        verticeOutput = open("./simpleData/verticeForTest.txt", 'w')
         verticeOutputWriter = csv.writer(verticeOutput, delimiter = ' ')
 
-        edgeOutput = open("./edgesForTest.txt", 'w')
+        edgeOutput = open("./simpleData/edgesForTest.txt", 'w')
         edgeOutputWriter = csv.writer(edgeOutput, delimiter = ' ')
         duplicateCatcher = set()
         duplicateEdgeCatcher = set()
@@ -41,8 +42,8 @@ class FileCreator():
 
         for path in paths:
 
-            print "path", path
-           # print("paht", path)
+            #print "path", path
+           # print("path", path)
             for i in range(0, len(path)-2):
                 src = path[i]
                 dest = path[i+1]
@@ -60,8 +61,8 @@ class FileCreator():
                         verticeOutputWriter.writerow([dest, bundledVerticeList[dest][0], bundledVerticeList[dest][1]])
                     duplicateCatcher.add(dest)
                 if (src, dest) not in duplicateEdgeCatcher:
-
-                    weight = min(int(bundledEdges[(src,dest)]), 70)
+                    print (str(log(float(bundledEdges[(src,dest)]), float(edgeMaxWeight))) + " " + bundledEdges[(src,dest)])
+                    weight = max(log(float(bundledEdges[(src,dest)]), float(edgeMaxWeight)) * float(40), 1)
                     edgeOutputWriter.writerow([src, dest, weight])
                     duplicateEdgeCatcher.add((src, dest, weight))
        # for point in pointsInPort:
